@@ -1,6 +1,8 @@
 # Channel.js
 Channel.js is a javascript library that makes it easy for you to send/receive messages via Channel Platform. https://www.getchannel.co
 
+#### Demo 
+A [demo page](https://www.getchannel.co/apps/app_fb5BAM_dgEJMAKQ0ux6iDx17sal5i6lCDQPP4GKbEXs/) using our Javascript library and Vue.js
 
 #### Requirement
 An account and Application on https://www.getchannel.co
@@ -84,4 +86,7 @@ var signedURL = data.result.data.url;
 })
 ```
 
+---
+If you have any question, Feel free to create an issue here or channel@mogohichi.com
 
+https://www.getchannel.co
