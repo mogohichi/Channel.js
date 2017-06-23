@@ -24,7 +24,7 @@ Channel.init(applicationKey)
 #### Channel.newClientIfNeeded()
 Use `Channel.newClientIfNeeded()` ot create a new client. This method returns javascript Promise with Channel client object so you can use `then`. If succeeded, your current client will be stored in `Channel.currentClient()`
 ```javascript
-Channel.currentClient().then(function(client){
+Channel.newClientIfNeeded().then(function(client){
    console.log("client ", client);
 });
 ```
