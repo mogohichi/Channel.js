@@ -14,11 +14,19 @@ Begin by including the library and setting your Application key. To get started,
 ```
 
 #### Channel.init(applicationKey)
-Use `Channel.init(applicationKey)` to initialize your application and create an instance of Channel client object. Application Key is required when calling this function. If succeeded, your current client will be stored in `Channel.currentClient()`
+Use `Channel.init(applicationKey)` to set your application key. Application Key is required when calling this function.
 
 ```javascript
 var applicationKey = ""
 Channel.init(applicationKey)
+```
+
+#### Channel.newClientIfNeeded()
+Use `Channel.newClientIfNeeded()` ot create a new client. This method returns javascript Promise with Channel client object so you can use `then`. If succeeded, your current client will be stored in `Channel.currentClient()`
+```javascript
+Channel.currentClient().then(function(client){
+   console.log("client ", client);
+});
 ```
 
 #### Channel.currentClient()
