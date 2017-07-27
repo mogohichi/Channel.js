@@ -91,6 +91,10 @@
 			var clientData =  {
 				deviceInfo:_navigator
 			};
+			var referrer = (window.location != window.parent.location)
+			    ? document.referrer
+			    : document.location.href;
+			clientData.deviceInfo["referrer"] = referrer;
 			clientData.deviceInfo["url"] = window.location.href;
 			clientData.deviceInfo["channelClient"] = "Channel.js/" + Channel.VERSION;
 			var data =  JSON.stringify(clientData);
