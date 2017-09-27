@@ -67,7 +67,6 @@
 				return null;
 			}
 		}
-		console.log("Missing Client ID. Did you call Channel.init?");
 		return null;
 	};
 
@@ -76,9 +75,9 @@
 	}
 
 	var _currentClient = {};
-	Channel.newClientIfNeeded = function(){
+	Channel.newClientIfNeeded = function(userData){
 		return new Promise(function(resolve) {
-			_newClient().then(function(client){
+			_newClient(userData).then(function(client){
 				_currentClient = new ChannelClient(client);
 				resolve(_currentClient);
 			});
@@ -94,7 +93,7 @@
 		return _request("GET",url,null).then(success,error);
 	};
 
-	_newClient = function(){
+	_newClient = function(userData){
 		return new Promise(function(success, error) {
 			var url = "/client";
 			var ajaxSuccess = function(data,status){
@@ -112,8 +111,13 @@
 			delete _navigator.plugins;
 			delete _navigator.mimeTypes;
 			var clientData =  {
-				deviceInfo:_navigator
+				deviceInfo: _navigator,
 			};
+
+			if (userData !== undefined) {
+				clientData.userData = userData;
+			}
+
 			var referrer = (window.location != window.parent.location)
 			? document.referrer
 			: document.location.href;
