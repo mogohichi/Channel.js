@@ -1,4 +1,4 @@
-
+	
 /*!
 * Channel JavaScript SDK
 * Version: 1.0
@@ -15,31 +15,49 @@
 	root.Channel = root.Channel || {};
 	root.Channel.VERSION = "0.1";
 	var getUrl = window.location;
-	// root.Channel.baseUrl = "https://api.getchannel.co/";
-	root.Channel.baseUrl = "http://localhost:8080/api";
+	root.Channel.baseUrl = "https://api.getchannel.co/";
 	root.Channel.applicationKey = "";
+	root.Channel.storageClient = "__currentClient"
+	root.Channel.storageApp = "__channelApplicationKey"
+	root.Channel.storageStory = "__channelStory"
+	root.Channel.initFromStory = false
 }(this));
 
 (function() {
 	var root = this;
+	Channel.initWithStory = function(applicationKey,storyID) {
+		Channel.initFromStory = true
+		Channel.storageClient = "__currentClientStory" 
+		Channel.storageApp = "__channelApplicationKeyStory"
+		Channel.storyID = storyID;
+		localStorage.setItem(Channel.storageStory,btoa(storyID));
+		return Channel.init(applicationKey);
+	};
 	Channel.init = function(applicationKey) {
 		Channel.applicationKey = applicationKey;
-		localStorage.setItem("__channelApplicationKey",btoa(applicationKey));
+		localStorage.setItem(Channel.storageApp,btoa(applicationKey));
 		return new Promise(function(resolve) {resolve()});
 	};
 
+	var getStoryID = function(){
+		var storyID = localStorage.getItem(Channel.storageStory);
+		if (storyID === null)
+			return ""
+		return atob(storyID);
+	}
+
 	var getApplicationKey = function(){
-		var applicationKey = localStorage.getItem('__channelApplicationKey');
+		var applicationKey = localStorage.getItem(Channel.storageApp);
 		return atob(applicationKey);
 	}
 
 	var setClient = function(data){
 		var encoded = encodeURIComponent(JSON.stringify(data));
-		localStorage.setItem("__currentClient" + getApplicationKey(), btoa(encoded));
+		localStorage.setItem(Channel.storageClient + getApplicationKey() + getStoryID(), btoa(encoded));
 	};
 
 	var getClient = function(){
-		var client = localStorage.getItem('__currentClient' + getApplicationKey());
+		var client = localStorage.getItem(Channel.storageClient + getApplicationKey()+ getStoryID());
 		if (client !== null){
 			try {
 				var u = JSON.parse(decodeURIComponent(atob(client)));
@@ -49,18 +67,17 @@
 				return null;
 			}
 		}
-		console.log("Missing Client ID. Did you call Channel.init?");
 		return null;
 	};
 
 	var clientExists = function(){
-		return localStorage.getItem('__currentClient' + getApplicationKey()) !== null;
+		return localStorage.getItem(Channel.storageClient + getApplicationKey()+ getStoryID()) !== null;
 	}
 
 	var _currentClient = {};
-	Channel.newClientIfNeeded = function(){
+	Channel.newClientIfNeeded = function(userData){
 		return new Promise(function(resolve) {
-			_newClient().then(function(client){
+			_newClient(userData).then(function(client){
 				_currentClient = new ChannelClient(client);
 				resolve(_currentClient);
 			});
@@ -71,7 +88,12 @@
 		return _currentClient;
 	};
 
-	_newClient = function(){
+	Channel.applicationInfo = function(success, error){
+		var url = "/app/info";
+		return _request("GET",url,null).then(success,error);
+	};
+
+	_newClient = function(userData){
 		return new Promise(function(success, error) {
 			var url = "/client";
 			var ajaxSuccess = function(data,status){
@@ -89,8 +111,17 @@
 			delete _navigator.plugins;
 			delete _navigator.mimeTypes;
 			var clientData =  {
-				deviceInfo:_navigator
+				deviceInfo: _navigator,
 			};
+
+			if (userData !== undefined) {
+				clientData.userData = userData;
+			}
+
+			var referrer = (window.location != window.parent.location)
+			? document.referrer
+			: document.location.href;
+			clientData.deviceInfo["referrer"] = referrer;
 			clientData.deviceInfo["url"] = window.location.href;
 			clientData.deviceInfo["channelClient"] = "Channel.js/" + Channel.VERSION;
 			var data =  JSON.stringify(clientData);
@@ -177,6 +208,7 @@
 		var source = new EventSource(endpoint);
 		source.onmessage = function(event) {
 			var sseData = JSON.parse(event.data)
+			// success(sseData.data);
 			success(sseData);
 		};
 	};
@@ -241,6 +273,10 @@
 				xhr.setRequestHeader("X-Channel-Client-ID", _currentClient.clientID);
 			}
 			
+			if(Channel.initFromStory){
+				xhr.setRequestHeader("X-Channel-Story-ID", getStoryID());
+			}
+
 			xhr.setRequestHeader("X-Channel-Application-Key", getApplicationKey());
 			xhr.setRequestHeader("Content-Type","application/json");
 			xhr.send(data);
